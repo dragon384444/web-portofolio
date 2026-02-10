@@ -140,3 +140,126 @@ window.addEventListener('load', () => {
         document.body.style.opacity = '1';
     }, 100);
 });
+
+// Interactive Background Particles
+class InteractiveBackground {
+    constructor() {
+        this.canvas = document.createElement('canvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.particles = [];
+        this.mouse = { x: null, y: null };
+        this.isMobile = window.innerWidth < 768;
+
+        this.init();
+    }
+
+    init() {
+        // Setup canvas
+        this.canvas.style.position = 'fixed';
+        this.canvas.style.top = '0';
+        this.canvas.style.left = '0';
+        this.canvas.style.width = '100%';
+        this.canvas.style.height = '100%';
+        this.canvas.style.pointerEvents = 'none';
+        this.canvas.style.zIndex = '1';
+        document.body.insertBefore(this.canvas, document.body.firstChild);
+
+        this.resize();
+        this.createParticles();
+        this.animate();
+
+        // Event listeners
+        window.addEventListener('resize', () => this.resize());
+
+        if (!this.isMobile) {
+            window.addEventListener('mousemove', (e) => {
+                this.mouse.x = e.clientX;
+                this.mouse.y = e.clientY;
+            });
+        }
+    }
+
+    resize() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        this.isMobile = window.innerWidth < 768;
+    }
+
+    createParticles() {
+        const particleCount = this.isMobile ? 30 : 50;
+        this.particles = [];
+
+        for (let i = 0; i < particleCount; i++) {
+            this.particles.push({
+                x: Math.random() * this.canvas.width,
+                y: Math.random() * this.canvas.height,
+                size: Math.random() * 3 + 1,
+                speedX: (Math.random() - 0.5) * 0.5,
+                speedY: (Math.random() - 0.5) * 0.5,
+                targetX: Math.random() * this.canvas.width,
+                targetY: Math.random() * this.canvas.height
+            });
+        }
+    }
+
+    animate() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.particles.forEach(particle => {
+            // Update particle position
+            if (this.isMobile) {
+                // Mobile: particles move randomly
+                particle.x += particle.speedX;
+                particle.y += particle.speedY;
+
+                // Bounce off edges
+                if (particle.x < 0 || particle.x > this.canvas.width) particle.speedX *= -1;
+                if (particle.y < 0 || particle.y > this.canvas.height) particle.speedY *= -1;
+            } else {
+                // Desktop: particles follow mouse with delay
+                if (this.mouse.x !== null) {
+                    const dx = this.mouse.x - particle.x;
+                    const dy = this.mouse.y - particle.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < 200) {
+                        const force = (200 - distance) / 200;
+                        particle.x += dx * 0.02 * force;
+                        particle.y += dy * 0.02 * force;
+                    }
+                }
+
+                // Gentle drift
+                particle.x += particle.speedX;
+                particle.y += particle.speedY;
+
+                // Keep particles in bounds
+                if (particle.x < 0) particle.x = this.canvas.width;
+                if (particle.x > this.canvas.width) particle.x = 0;
+                if (particle.y < 0) particle.y = this.canvas.height;
+                if (particle.y > this.canvas.height) particle.y = 0;
+            }
+
+            // Draw particle
+            this.ctx.beginPath();
+            this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+
+            // Gradient glow effect
+            const gradient = this.ctx.createRadialGradient(
+                particle.x, particle.y, 0,
+                particle.x, particle.y, particle.size * 4
+            );
+            gradient.addColorStop(0, 'rgba(99, 102, 241, 0.8)');
+            gradient.addColorStop(0.5, 'rgba(139, 92, 246, 0.4)');
+            gradient.addColorStop(1, 'rgba(139, 92, 246, 0)');
+
+            this.ctx.fillStyle = gradient;
+            this.ctx.fill();
+        });
+
+        requestAnimationFrame(() => this.animate());
+    }
+}
+
+// Initialize interactive background
+new InteractiveBackground();
