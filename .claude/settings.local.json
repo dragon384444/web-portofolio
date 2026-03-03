@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:naniwaya-osaka.com)"
+      "WebFetch(domain:naniwaya-osaka.com)",
+      "Bash(gh run list --repo dragon384444/web-portofolio --limit 5)"
     ]
   }
 }
